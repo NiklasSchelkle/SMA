@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------------------
 # BESCHREIBUNG:
 # Dieses Skript ist eine Streamlit-Webanwendung, die einen RAG (Retrieval-Augmented Generation) 
-# Chatbot bereitstellt. Der Chatbot dient als Finanzanalyst für den Nasdaq 100.
+# Chatbot bereitstellt. Der Chatbot dient als Finanzanalyst für den Nasdaq 100. Insgesamt folgt diese Python datei exakt der RAG-Logik aus dem IPYNB!
 #
 # FUNKTIONSWEISE:
 # 1. UI & Setup: Der Nutzer gibt seinen OpenAI API-Key ein.
@@ -40,10 +40,10 @@ from langgraph.graph import StateGraph, END
 # Konfiguriert die Seite (Titel, Icon, Layout)
 st.set_page_config(page_title="Der Nasdaq Experte", page_icon="📈", layout="wide")
 
-# --- Sidebar & Setup ---
+# Sidebar 
 with st.sidebar:
     # Titel in der Seitenleiste
-    st.title("⚙️ Einstellungen")
+    st.title("⚙️")
     
     # Eingabefeld für den API Key (Maskiert als Passwort)
     api_key = st.text_input("OpenAI API Key", type="password", help="Gib hier deinen OpenAI API Key ein.")
@@ -64,10 +64,8 @@ with st.sidebar:
         st.session_state.messages = [] # Leert den Nachrichtenverlauf
         st.rerun() # Lädt die App neu
     
-    # Info-Box für den Nutzer
-    st.info("Vollständiges Chat-Memory: Das LLM kennt jetzt den Verlauf.")
 
-# --- Initialisierung & Caching (RAG Logik) ---
+# Initialisierung & Caching (RAG Logik)
 # @st.cache_resource sorgt dafür, dass die Datenbank nicht bei jedem Klick neu gebaut wird, sondern im Cache bleibt.
 @st.cache_resource(show_spinner="Lade Daten und erstelle Vektor-Datenbank...")
 def initialize_rag_system():
@@ -171,7 +169,7 @@ def initialize_rag_system():
         context: List[Document] # Die gefundenen Dokumente
         answer: str             # Die generierte Antwort
 
-    # --- Knoten 1: Query Reformulation (Frage verbessern) ---
+    # Knoten 1: Query Reformulation (Frage verbessern) 
     def reformulate_query(state):
         # Holt den Verlauf
         history = state.get("chat_history", [])
@@ -196,7 +194,7 @@ def initialize_rag_system():
         state["input"] = response.content
         return state
 
-    # --- Knoten 2: Retrieve (Suchen) ---
+    # Knoten 2: Retrieve (Suchen)
     def retrieve(state):
         # Sucht in der Datenbank nach der (umformulierten) Frage
         docs = retriever.invoke(state["input"])
@@ -204,7 +202,7 @@ def initialize_rag_system():
         state["context"] = docs
         return state
 
-    # --- Knoten 3: Generate (Antworten) ---
+    # Knoten 3: Generate (Antworten)
     # Hier wurde der Code exakt an das IPYNB angepasst und korrigiert
     def generate(state):
 
@@ -255,7 +253,7 @@ def initialize_rag_system():
         state["answer"] = answer.content
         return state
 
-    # --- Graph Definition (Zusammenbau) ---
+    # Graph Definition (Zusammenbau)
     rag_graph = (
         StateGraph(RAGState)
         .add_node("reformulate", reformulate_query) # Knoten hinzufügen
@@ -270,8 +268,8 @@ def initialize_rag_system():
     
     return rag_graph # Gibt den fertigen Graphen zurück
 
-# --- Main UI (Hauptprogramm) ---
-st.title("📈 NASDAQ Financial Analyst AI (Full Memory)")
+# Main UI (Hauptprogramm)
+st.title("📈 Der NASDAQ100 Experte")
 
 # Initialisiert das RAG System (wird gecached)
 rag_app = initialize_rag_system()
@@ -319,3 +317,4 @@ if prompt := st.chat_input("Stelle ein Frage z.B. analysiere Apple"):
             
             # Speichert die Antwort im Session State Verlauf
             st.session_state.messages.append({"role": "assistant", "content": answer_text})
+
