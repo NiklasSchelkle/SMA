@@ -1,7 +1,8 @@
 # -----------------------------------------------------------------------------------------
 # BESCHREIBUNG:
 # Dieses Skript ist eine Streamlit-Webanwendung, die einen RAG (Retrieval-Augmented Generation) 
-# Chatbot bereitstellt. Der Chatbot dient als Finanzanalyst für den Nasdaq 100.
+# Chatbot bereitstellt. Der Chatbot dient als Finanzanalyst für den Nasdaq 100. Der Code folgt exakt der Logik des IPYNB. 
+# Bei der Erstellung wurde Gemini stark in Anspruch genommen. Es wurde viel auf Basis des IPYNB generiert! 
 #
 # FUNKTIONSWEISE:
 # 1. UI & Setup: Der Nutzer gibt seinen OpenAI API-Key ein.
@@ -43,7 +44,7 @@ st.set_page_config(page_title="Der Nasdaq Experte", page_icon="📈", layout="wi
 # Sidebar 
 with st.sidebar:
     # Titel in der Seitenleiste
-    st.title("⚙️ Einstellungen")
+    st.title("⚙️")
     
     # Eingabefeld für den API Key (Maskiert als Passwort)
     api_key = st.text_input("OpenAI API Key", type="password", help="Gib hier deinen OpenAI API Key ein.")
@@ -63,9 +64,6 @@ with st.sidebar:
     if st.button("Neuer Chat", type="primary", use_container_width=True):
         st.session_state.messages = [] # Leert den Nachrichtenverlauf
         st.rerun() # Lädt die App neu
-    
-    # Info-Box für den Nutzer
-    st.info("Vollständiges Chat-Memory: Das LLM kennt jetzt den Verlauf.")
 
 # Initialisierung & Caching (RAG Logik)
 # @st.cache_resource sorgt dafür, dass die Datenbank nicht bei jedem Klick neu gebaut wird, sondern im Cache bleibt.
@@ -106,7 +104,6 @@ def initialize_rag_system():
         """
     
         # Erstellt das Metadaten-Dictionary (Datenpaket für den Rucksack)
-        # Hier wurden 52_week_high, avg_monthly_return und news_summary ergänzt
         metadata = {
             "ticker": row["Ticker"],
             "company": row["Company"],
@@ -116,8 +113,8 @@ def initialize_rag_system():
             "market_cap": row["Market Cap"],
             "current_price": row["Current Price"],
             "previous_close": row["Previous Close"],
-            "52_week_high": row["52 Week High"],             # NEU
-            "avg_monthly_return": row["Average Monthly Return"], # NEU
+            "52_week_high": row["52 Week High"],             
+            "avg_monthly_return": row["Average Monthly Return"],
             "dividend_yield": row["Dividend Yield"],
             "pe_ratio": row["PE Ratio"],
             "forward_pe": row["Forward PE"],
@@ -131,7 +128,7 @@ def initialize_rag_system():
             "confidence": row["Confidence"],
             "news_link": row["Latest_News_Link"],
             "latest_news_title": row["Latest_News_Title"],
-            "news_summary": row["News Summary"],             # NEU
+            "news_summary": row["News Summary"],            
             "website": row["Website"], 
         }
         # Gibt ein Document-Objekt zurück
@@ -171,7 +168,7 @@ def initialize_rag_system():
         context: List[Document] # Die gefundenen Dokumente
         answer: str             # Die generierte Antwort
 
-    # --- Knoten 1: Query Reformulation (Frage verbessern) ---
+    # Knoten 1: Query Reformulation (Frage verbessern)
     def reformulate_query(state):
         # Holt den Verlauf
         history = state.get("chat_history", [])
@@ -196,7 +193,7 @@ def initialize_rag_system():
         state["input"] = response.content
         return state
 
-    # --- Knoten 2: Retrieve (Suchen) ---
+    # Knoten 2: Retrieve (Suchen) 
     def retrieve(state):
         # Sucht in der Datenbank nach der (umformulierten) Frage
         docs = retriever.invoke(state["input"])
@@ -204,7 +201,7 @@ def initialize_rag_system():
         state["context"] = docs
         return state
 
-    # --- Knoten 3: Generate (Antworten) ---
+    #  Knoten 3: Generate (Antworten) 
     # Hier wurde der Code exakt an das IPYNB angepasst und korrigiert
     def generate(state):
 
@@ -271,7 +268,7 @@ def initialize_rag_system():
     return rag_graph # Gibt den fertigen Graphen zurück
 
 # --- Main UI (Hauptprogramm) ---
-st.title("📈 NASDAQ Financial Analyst AI (Full Memory)")
+st.title("📈 Der Nasdaq100 Experte")
 
 # Initialisiert das RAG System (wird gecached)
 rag_app = initialize_rag_system()
@@ -319,3 +316,4 @@ if prompt := st.chat_input("Stelle ein Frage z.B. analysiere Apple"):
             
             # Speichert die Antwort im Session State Verlauf
             st.session_state.messages.append({"role": "assistant", "content": answer_text})
+
